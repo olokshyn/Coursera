@@ -10,6 +10,7 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
     private int N;
+    private int openSitesNumber;
     private int[] grid;
     private WeightedQuickUnionUF wquf;
     private WeightedQuickUnionUF wqufNoBack;
@@ -19,6 +20,7 @@ public class Percolation {
             throw new IllegalArgumentException("N must be > 0");
         }
         this.N = N;
+        openSitesNumber = 0;
         grid = new int[N * N];
         wquf = new WeightedQuickUnionUF(N * N + 2);
         wqufNoBack = new WeightedQuickUnionUF(N * N + 1);
@@ -29,6 +31,7 @@ public class Percolation {
         if (grid[index] == 1) {
             return;
         }
+        ++openSitesNumber;
         grid[index] = 1;
         if (i == 1) {
             wquf.union(index, N * N);
@@ -61,6 +64,10 @@ public class Percolation {
 
     public boolean isFull(int i, int j) {
         return wqufNoBack.connected(getIndex(i, j), N * N);
+    }
+
+    public int numberOfOpenSites() {
+        return openSitesNumber;
     }
 
     public boolean percolates() {
