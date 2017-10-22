@@ -1,7 +1,7 @@
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-//import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.StdRandom;
 
 public class RandomizedQueue<Item> implements Iterable<Item>
 {
@@ -80,7 +80,7 @@ public class RandomizedQueue<Item> implements Iterable<Item>
         items[n] = null;
         if (n == items.length / 4)
         {
-            resize(items.length / 2);
+            resize(Math.max(items.length / 2, 1));
         }
         return item;
     }
@@ -102,6 +102,10 @@ public class RandomizedQueue<Item> implements Iterable<Item>
 
     private void resize(int size)
     {
+        if (size == items.length)
+        {
+            return;
+        }
         Item[] newItems = (Item[]) new Object[size];
         for (int i = 0; i != n; ++i)
         {

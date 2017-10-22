@@ -19,25 +19,28 @@ public class Main
 //        }
 
         RandomizedQueue<Integer> randQueue = new RandomizedQueue<>();
-        randQueue.enqueue(1);
-        randQueue.enqueue(2);
-        randQueue.enqueue(3);
-        randQueue.enqueue(4);
-        randQueue.enqueue(5);
+        randQueue.enqueue(28);
         randQueue.dequeue();
-        randQueue.dequeue();
-        randQueue.dequeue();
-        randQueue.enqueue(6);
-        randQueue.enqueue(7);
-        randQueue.enqueue(8);
-        randQueue.dequeue();
-        randQueue.dequeue();
-        randQueue.dequeue();
-        randQueue.dequeue();
-        randQueue.enqueue(9);
-        randQueue.enqueue(10);
-        randQueue.enqueue(11);
-        randQueue.enqueue(12);
+        randQueue.enqueue(35);
+//        randQueue.enqueue(1);
+//        randQueue.enqueue(2);
+//        randQueue.enqueue(3);
+//        randQueue.enqueue(4);
+//        randQueue.enqueue(5);
+//        randQueue.dequeue();
+//        randQueue.dequeue();
+//        randQueue.dequeue();
+//        randQueue.enqueue(6);
+//        randQueue.enqueue(7);
+//        randQueue.enqueue(8);
+//        randQueue.dequeue();
+//        randQueue.dequeue();
+//        randQueue.dequeue();
+//        randQueue.dequeue();
+//        randQueue.enqueue(9);
+//        randQueue.enqueue(10);
+//        randQueue.enqueue(11);
+//        randQueue.enqueue(12);
 
         for (int a : randQueue)
         {
