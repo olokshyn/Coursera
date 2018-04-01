@@ -106,7 +106,7 @@ public class Point implements Comparable<Point> {
         }
 
         public int compare(Point left, Point right) {
-            double diff = Math.abs(current.slopeTo(left)) - Math.abs(current.slopeTo(right));
+            double diff = current.slopeTo(left) - current.slopeTo(right);
             return Math.abs(diff) < 0.000001 ? 0 : (diff > 0 ? 1 : -1);
         }
     }
