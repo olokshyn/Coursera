@@ -11,11 +11,6 @@ public class FastCollinearPoints
     public FastCollinearPoints(Point[] points) {
         segments = new LinkedList<LineSegment>();
 
-        double[] pointsMinSlopes = new double[points.length];
-        for (int i = 0; i != points.length; ++i) {
-            pointsMinSlopes[i] = Double.NEGATIVE_INFINITY;
-        }
-
         for (int i = 0; i != points.length; ++i) {
             Arrays.sort(points, i, points.length);
             Arrays.sort(points, i + 1, points.length, points[i].slopeOrder());
@@ -25,14 +20,14 @@ public class FastCollinearPoints
             while (j < points.length) {
                 if (startPointIndex != j
                         && !pointsCollinear(points[i], points[startPointIndex], points[j])) {
-                    addSegment(points, pointsMinSlopes, i, startPointIndex, j);
+                    addSegment(points, i, startPointIndex, j);
                     startPointIndex = j;
                 }
                 ++j;
             }
 
             if (startPointIndex < points.length) {
-                addSegment(points, pointsMinSlopes, i, startPointIndex, points.length);
+                addSegment(points, i, startPointIndex, points.length);
             }
         }
     }
@@ -51,18 +46,13 @@ public class FastCollinearPoints
         return slope1 == slope2 || Math.abs(slope1 - slope2) < 0.00000001;
     }
 
-    private void addSegment(Point[] points, double[] pointsMinSlopes,
-                            int originIndex, int startPointIndex, int endPointIndex)
-    {
+    private void addSegment(Point[] points, int originIndex, int startPointIndex, int endPointIndex) {
         int collinearPointsCount = endPointIndex - startPointIndex + 1;
-        double slope = Math.abs(points[originIndex].slopeTo(points[startPointIndex]));
         if (collinearPointsCount >= 4
-                && points[originIndex].compareTo(points[startPointIndex]) <= 0
-                && slope > pointsMinSlopes[originIndex]) {
+                && (originIndex == 0
+                        || points[originIndex - 1].slopeTo(points[originIndex])
+                           != points[originIndex].slopeTo(points[startPointIndex]))) {
             segments.add(new LineSegment(points[originIndex], points[endPointIndex - 1]));
-            for (int i = startPointIndex; i != endPointIndex; ++i) {
-                pointsMinSlopes[i] = slope;
-            }
         }
     }
 
