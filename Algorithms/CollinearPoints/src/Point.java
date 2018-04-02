@@ -60,15 +60,15 @@ public class Point implements Comparable<Point> {
      */
     public double slopeTo(Point that) {
         if (x == that.x) {
+            if (y == that.y) {
+                return Double.NEGATIVE_INFINITY;
+            }
             return Double.POSITIVE_INFINITY;
         }
         if (y == that.y) {
             return 0.0; // needed to prevent floating-point precision issue.
         }
-        if (compareTo(that) == 0) {
-            return Double.NEGATIVE_INFINITY;
-        }
-        return (that.y - y) / (double)(that.x - x);
+        return (that.y - y) / (double) (that.x - x);
     }
 
     /**
@@ -84,7 +84,13 @@ public class Point implements Comparable<Point> {
      *         argument point
      */
     public int compareTo(Point that) {
-        return y != that.y ? y - that.y : x - that.x;
+        if (Math.abs(y - that.y) < 0.000001) {
+            if (Math.abs(x - that.x) < 0.000001) {
+                return 0;
+            }
+            return x < that.x ? -1 : 1;
+        }
+        return y < that.y ? -1 : 1;
     }
 
     /**
@@ -132,6 +138,10 @@ public class Point implements Comparable<Point> {
      * Unit tests the Point data type.
      */
     public static void main(String[] args) {
-        /* YOUR CODE HERE */
+        Point p = new Point(98, 326);
+        Point q = new Point(239, 258);
+        Point r = new Point(98, 326);
+
+        System.out.println(p.slopeOrder().compare(q, r));
     }
 }

@@ -8,24 +8,47 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class BruteCollinearPoints
 {
-    private List<LineSegment> segments;
+    private final List<LineSegment> segments;
 
     public BruteCollinearPoints(Point[] points) {
-        segments = new LinkedList<LineSegment>();
+        if (points == null) {
+            throw new IllegalArgumentException();
+        }
+
+        points = Arrays.copyOf(points, points.length);
 
         Arrays.sort(points);
+        for (int i = 1; i < points.length; ++i) {
+            if (points[i - 1].compareTo(points[i]) == 0) {
+                throw new IllegalArgumentException();
+            }
+        }
+
+        segments = new LinkedList<LineSegment>();
 
         for (int i = 0; i != points.length; ++i) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException();
+            }
             for (int j = i + 1; j < points.length; ++j) {
+                if (points[j] == null) {
+                    throw new IllegalArgumentException();
+                }
                 for (int k = j + 1; k < points.length; ++k) {
+                    if (points[k] == null) {
+                        throw new IllegalArgumentException();
+                    }
                     if (!pointsCollinear(points[i], points[j], points[k])) {
                         continue;
                     }
-                    for (int l = k + 1; l < points.length; ++l) {
-                        if (!pointsCollinear(points[i], points[j], points[l])) {
+                    for (int m = k + 1; m < points.length; ++m) {
+                        if (points[m] == null) {
+                            throw new IllegalArgumentException();
+                        }
+                        if (!pointsCollinear(points[i], points[j], points[m])) {
                             continue;
                         }
-                        segments.add(new LineSegment(points[i], points[l]));
+                        segments.add(new LineSegment(points[i], points[m]));
                     }
                 }
             }

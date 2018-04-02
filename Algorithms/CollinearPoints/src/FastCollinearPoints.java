@@ -1,23 +1,44 @@
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Arrays;
+
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 
-import java.util.*;
-
 public class FastCollinearPoints
 {
-    private List<LineSegment> segments;
+    private final List<LineSegment> segments;
 
     public FastCollinearPoints(Point[] points) {
+        if (points == null) {
+            throw new IllegalArgumentException();
+        }
+
+        points = Arrays.copyOf(points, points.length);
+        Arrays.sort(points);
+        for (int i = 1; i < points.length; ++i) {
+            if (points[i - 1].compareTo(points[i]) == 0) {
+                throw new IllegalArgumentException();
+            }
+        }
+
         segments = new LinkedList<LineSegment>();
 
         for (int i = 0; i != points.length; ++i) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException();
+            }
+
             Arrays.sort(points, i, points.length);
             Arrays.sort(points, i + 1, points.length, points[i].slopeOrder());
 
             int j = i + 1;
             int startPointIndex = j;
             while (j < points.length) {
+                if (points[j] == null) {
+                    throw new IllegalArgumentException();
+                }
                 if (startPointIndex != j
                         && !pointsCollinear(points[i], points[startPointIndex], points[j])) {
                     addSegment(points, i, startPointIndex, j);
@@ -50,7 +71,9 @@ public class FastCollinearPoints
         int collinearPointsCount = endPointIndex - startPointIndex + 1;
         if (collinearPointsCount >= 4) {
             for (int i = 0; i != originIndex; ++i) {
-                if (points[i].slopeTo(points[originIndex]) == points[originIndex].slopeTo(points[startPointIndex]))
+                double slope1 = points[i].slopeTo(points[originIndex]);
+                double slope2 = points[originIndex].slopeTo(points[startPointIndex]);
+                if (slope1 == slope2 || Math.abs(slope1 - slope2) < 0.000001)
                 {
                     return;
                 }
