@@ -48,10 +48,13 @@ public class FastCollinearPoints
 
     private void addSegment(Point[] points, int originIndex, int startPointIndex, int endPointIndex) {
         int collinearPointsCount = endPointIndex - startPointIndex + 1;
-        if (collinearPointsCount >= 4
-                && (originIndex == 0
-                        || points[originIndex - 1].slopeTo(points[originIndex])
-                           != points[originIndex].slopeTo(points[startPointIndex]))) {
+        if (collinearPointsCount >= 4) {
+            for (int i = 0; i != originIndex; ++i) {
+                if (points[i].slopeTo(points[originIndex]) == points[originIndex].slopeTo(points[startPointIndex]))
+                {
+                    return;
+                }
+            }
             segments.add(new LineSegment(points[originIndex], points[endPointIndex - 1]));
         }
     }
