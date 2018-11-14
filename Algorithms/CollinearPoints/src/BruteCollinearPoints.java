@@ -14,9 +14,13 @@ public class BruteCollinearPoints
         if (points == null) {
             throw new IllegalArgumentException();
         }
+        for (int i = 0; i != points.length; ++i) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException();
+            }
+        }
 
         points = Arrays.copyOf(points, points.length);
-
         Arrays.sort(points);
         for (int i = 1; i < points.length; ++i) {
             if (points[i - 1].compareTo(points[i]) == 0) {
@@ -27,24 +31,12 @@ public class BruteCollinearPoints
         segments = new LinkedList<LineSegment>();
 
         for (int i = 0; i != points.length; ++i) {
-            if (points[i] == null) {
-                throw new IllegalArgumentException();
-            }
             for (int j = i + 1; j < points.length; ++j) {
-                if (points[j] == null) {
-                    throw new IllegalArgumentException();
-                }
                 for (int k = j + 1; k < points.length; ++k) {
-                    if (points[k] == null) {
-                        throw new IllegalArgumentException();
-                    }
                     if (!pointsCollinear(points[i], points[j], points[k])) {
                         continue;
                     }
                     for (int m = k + 1; m < points.length; ++m) {
-                        if (points[m] == null) {
-                            throw new IllegalArgumentException();
-                        }
                         if (!pointsCollinear(points[i], points[j], points[m])) {
                             continue;
                         }

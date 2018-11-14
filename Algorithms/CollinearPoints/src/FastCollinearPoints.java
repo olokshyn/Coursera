@@ -14,6 +14,11 @@ public class FastCollinearPoints
         if (points == null) {
             throw new IllegalArgumentException();
         }
+        for (int i = 0; i != points.length; ++i) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException();
+            }
+        }
 
         points = Arrays.copyOf(points, points.length);
         Arrays.sort(points);
@@ -32,6 +37,7 @@ public class FastCollinearPoints
 
             Arrays.sort(points, i, points.length);
             Arrays.sort(points, i + 1, points.length, points[i].slopeOrder());
+            Arrays.sort(points, 0, i, points[i].slopeOrder());
 
             int j = i + 1;
             int startPointIndex = j;
@@ -70,16 +76,36 @@ public class FastCollinearPoints
     private void addSegment(Point[] points, int originIndex, int startPointIndex, int endPointIndex) {
         int collinearPointsCount = endPointIndex - startPointIndex + 1;
         if (collinearPointsCount >= 4) {
-            for (int i = 0; i != originIndex; ++i) {
-                double slope1 = points[i].slopeTo(points[originIndex]);
-                double slope2 = points[originIndex].slopeTo(points[startPointIndex]);
-                if (slope1 == slope2 || Math.abs(slope1 - slope2) < 0.000001)
-                {
-                    return;
-                }
+            if (slopeAlreadySeen(points, originIndex,
+                    points[originIndex].slopeTo(points[startPointIndex]))) {
+                return;
             }
             segments.add(new LineSegment(points[originIndex], points[endPointIndex - 1]));
         }
+    }
+
+    private boolean slopeAlreadySeen(Point[] points, int originIndex, double currentSlope) {
+        if (originIndex == 0) {
+            return false;
+        }
+        int lo = 0;
+        int hi = originIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            double slope = points[mid].slopeTo(points[originIndex]);
+
+            if (slope == currentSlope || Math.abs(slope - currentSlope) < 0.000001) {
+                return true;
+            }
+            else if (slope < currentSlope) {
+                lo = mid + 1;
+            }
+            else if (slope > currentSlope) {
+                hi = mid - 1;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {
