@@ -1,4 +1,3 @@
-import java.lang.Comparable;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Collections;
@@ -9,30 +8,38 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class Solver
 {
-    private List<Board> m_solution;
-    private int m_moves;
+    private List<Board> solution;
 
     private class Node implements Comparable<Node>
     {
         public Board board;
         public Node parent;
+        public int manhattan;
         public int moves;
 
-        public Node(Board board, Node parent, int moves)
+        public Node(Board board, Node parent)
         {
             this.board = board;
             this.parent = parent;
-            this.moves = moves;
+            manhattan = board.manhattan();
+            moves = 0;
+            Node n = parent;
+            while (n != null)
+            {
+                ++moves;
+                n = n.parent;
+            }
         }
 
         public int priority()
         {
-            return board.manhattan() + moves;
+            return manhattan + moves;
         }
 
         public int compareTo(Node other)
         {
-            return priority() - other.priority();
+            int diff = priority() - other.priority();
+            return diff;
         }
     }
 
@@ -43,62 +50,71 @@ public class Solver
             throw new IllegalArgumentException();
         }
 
-        m_solution = null;
-        m_moves = 0;
+        solution = null;
 
         MinPQ<Node> nodes = new MinPQ<Node>();
-        nodes.insert(new Node(initial, null, m_moves));
+        nodes.insert(new Node(initial, null));
 
-        MinPQ<Node> nodes_twinned = new MinPQ<Node>();
-        nodes_twinned.insert(new Node(initial.twin(), null, m_moves));
+        MinPQ<Node> nodesTwinned = new MinPQ<Node>();
+        nodesTwinned.insert(new Node(initial.twin(), null));
 
-        while (!nodes.isEmpty() && !nodes_twinned.isEmpty())
+        while (!nodes.isEmpty() && !nodesTwinned.isEmpty())
         {
             Node node = nodes.delMin();
             if (node.board.isGoal())
             {
-                m_solution = new LinkedList<Board>();
+                solution = new LinkedList<Board>();
                 while (node != null)
                 {
-                    m_solution.add(node.board);
+                    solution.add(node.board);
                     node = node.parent;
                 }
-                Collections.reverse(m_solution);
+                Collections.reverse(solution);
                 break;
             }
 
-            Node node_twinned = nodes_twinned.delMin();
-            if (node_twinned.board.isGoal())
+            Node nodeTwinned = nodesTwinned.delMin();
+            if (nodeTwinned.board.isGoal())
             {
                 // No solution
                 break;
             }
 
-            ++m_moves;
             for (Board neighbor : node.board.neighbors())
             {
-                nodes.insert(new Node(neighbor, node, m_moves));
+                if (node.parent == null || !neighbor.equals(node.parent.board))
+                {
+                    nodes.insert(new Node(neighbor, node));
+                }
+
             }
-            for (Board neighbor : node_twinned.board.neighbors())
+            for (Board neighbor : nodeTwinned.board.neighbors())
             {
-                nodes_twinned.insert(new Node(neighbor, node_twinned, m_moves));
+                if (nodeTwinned.parent == null || !neighbor.equals(nodeTwinned.parent.board))
+                {
+                    nodesTwinned.insert(new Node(neighbor, nodeTwinned));
+                }
             }
         }
     }
 
     public boolean isSolvable()            // is the initial board solvable?
     {
-        return m_solution != null;
+        return solution != null;
     }
 
     public int moves()                     // min number of moves to solve initial board; -1 if unsolvable
     {
-        return m_moves;
+        if (solution != null)
+        {
+            return solution.size() - 1;
+        }
+        return -1;
     }
 
     public Iterable<Board> solution()      // sequence of boards in a shortest solution; null if unsolvable
     {
-        return m_solution;
+        return solution;
     }
 
     public static void main(String[] args) // solve a slider puzzle (given below)

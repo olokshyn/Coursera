@@ -1,16 +1,13 @@
 import java.util.List;
+import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 public class Board
 {
-    private int[][] m_blocks;
-    private int m_hamming;
-    private int m_manhattan;
-    private Board m_parent;
-
-    private static Random s_random = new Random();
+    private int[][] blocks;
+    private int hamming;
+    private int manhattan;
+    private Board parent;
 
     private class Point
     {
@@ -40,7 +37,7 @@ public class Board
                 return false;
             }
 
-            Point obj = (Point)other;
+            Point obj = (Point) other;
             return i == obj.i && j == obj.j;
         }
 
@@ -53,83 +50,97 @@ public class Board
     public Board(int[][] blocks)           // construct a board from an n-by-n array of blocks
                                            // (where blocks[i][j] = block in row i, column j)
     {
-        m_blocks = blocks;
-        m_hamming = -1;
-        m_manhattan = -1;
-        m_parent = null;
+        this.blocks = blocks.clone();
+        for (int i = 0; i != dimension(); ++i)
+        {
+            this.blocks[i] = blocks[i].clone();
+        }
+        hamming = -1;
+        manhattan = -1;
+        parent = null;
     }
 
     private Board(Board other)
     {
-        m_blocks = other.m_blocks.clone();
+        blocks = other.blocks.clone();
         for (int i = 0; i != dimension(); ++i)
         {
-            m_blocks[i] = other.m_blocks[i].clone();
+            blocks[i] = other.blocks[i].clone();
         }
-        m_hamming = other.m_hamming;
-        m_manhattan = other.m_manhattan;
-        m_parent = other.m_parent;
+        hamming = other.hamming;
+        manhattan = other.manhattan;
+        parent = other.parent;
     }
 
     public int dimension()                 // board dimension n
     {
-        return m_blocks.length;
+        return blocks.length;
     }
 
     public int hamming()                   // number of blocks out of place
     {
-        if (m_hamming > -1)
+        if (hamming > -1)
         {
-            return m_hamming;
+            return hamming;
         }
 
-        m_hamming = 0;
+        hamming = 0;
         for (int i = 0; i != dimension(); ++i)
         {
             for (int j = 0; j != dimension(); ++j)
             {
                 if (!elemValid(i, j))
                 {
-                    ++m_hamming;
+                    ++hamming;
                 }
             }
         }
-        return m_hamming;
+        return hamming;
     }
 
     public int manhattan()                 // sum of Manhattan distances between blocks and goal
     {
-        if (m_manhattan > -1)
+        if (manhattan > -1)
         {
-            return m_manhattan;
+            return manhattan;
         }
 
-        m_manhattan = 0;
+        manhattan = 0;
         for (int i = 0; i != dimension(); ++i)
         {
             for (int j = 0; j != dimension(); ++j)
             {
-                if (m_blocks[i][j] == 0)
+                if (blocks[i][j] == 0)
                 {
                     continue;
                 }
                 Point goal = getGoal(i, j);
-                m_manhattan += Math.abs(goal.i - i);
-                m_manhattan += Math.abs(goal.j - j);
+                manhattan += Math.abs(goal.i - i);
+                manhattan += Math.abs(goal.j - j);
             }
         }
-        return m_manhattan;
+        return manhattan;
     }
 
     public boolean isGoal()                // is this board the goal board?
     {
-        return hamming() == 0;
+        return manhattan() == 0;
     }
 
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
         Board other = new Board(this);
-        Point[] points = getRandom();
+        Point[] points = null;
+        int n = dimension() - 1;
+        if (blocks[0][n] != 0 && blocks[n][0] != 0)
+        {
+            points = new Point[]{new Point(0, n), new Point(n, 0)};
+        }
+        else if (blocks[0][0] != 0 && blocks[n][n] != 0)
+        {
+            points = new Point[]{new Point(0, 0), new Point(n, n)};
+        }
+        assert points != null;
         other.swap(points[0], points[1]);
         return other;
     }
@@ -151,8 +162,8 @@ public class Board
             return false;
         }
 
-        Board obj = (Board)y;
-        return m_blocks == obj.m_blocks;
+        Board obj = (Board) y;
+        return Arrays.deepEquals(blocks, obj.blocks);
     }
 
     public Iterable<Board> neighbors()     // all neighboring boards
@@ -177,14 +188,6 @@ public class Board
             moves.add(new Point(0, 1));
         }
 
-        if (m_parent != null)
-        {
-            Point parentEmpty = m_parent.getEmpty();
-            moves = moves.stream()
-                    .filter(dir -> !empty.move(dir).equals(parentEmpty))
-                    .collect(Collectors.toList());
-        }
-
         LinkedList<Board> neighbors = new LinkedList<Board>();
         for (Point dir : moves)
         {
@@ -202,7 +205,7 @@ public class Board
         {
             for (int j = 0; j != dimension(); ++j)
             {
-                sb.append(Integer.toString(m_blocks[i][j]));
+                sb.append(Integer.toString(blocks[i][j]));
                 sb.append(" ");
             }
             sb.append(System.lineSeparator());
@@ -212,23 +215,23 @@ public class Board
 
     private boolean elemValid(int i, int j)
     {
-        return m_blocks[i][j] == 0 || m_blocks[i][j] == i * dimension() + j + 1;
+        return blocks[i][j] == 0 || blocks[i][j] == i * dimension() + j + 1;
     }
 
     private Point getGoal(int i, int j)
     {
         return new Point(
-                (m_blocks[i][j] - 1) / dimension(),
-                (m_blocks[i][j] - 1) % dimension());
+                (blocks[i][j] - 1) / dimension(),
+                (blocks[i][j] - 1) % dimension());
     }
 
     private void swap(Point p1, Point p2)
     {
-        int temp = m_blocks[p1.i][p1.j];
-        m_blocks[p1.i][p1.j] = m_blocks[p2.i][p2.j];
-        m_blocks[p2.i][p2.j] = temp;
-        m_hamming = -1;
-        m_manhattan = -1;
+        int temp = blocks[p1.i][p1.j];
+        blocks[p1.i][p1.j] = blocks[p2.i][p2.j];
+        blocks[p2.i][p2.j] = temp;
+        hamming = -1;
+        manhattan = -1;
     }
 
     private Point getEmpty()
@@ -237,7 +240,7 @@ public class Board
         {
             for (int j = 0; j != dimension(); ++j)
             {
-                if (m_blocks[i][j] == 0)
+                if (blocks[i][j] == 0)
                 {
                     return new Point(i, j);
                 }
@@ -246,28 +249,13 @@ public class Board
         throw new IllegalArgumentException("No empty block");
     }
 
-    private Point[] getRandom()
-    {
-        int i1, j1, i2, j2;
-        do
-        {
-            i1 = s_random.nextInt(dimension());
-            j1 = s_random.nextInt(dimension());
-            i2 = s_random.nextInt(dimension());
-            j2 = s_random.nextInt(dimension());
-        } while ((i1 == i2 && j1 == j2)
-                || m_blocks[i1][j1] == 0
-                || m_blocks[i2][j2] == 0);
-        return new Point[]{new Point(i1, j1), new Point(i2, j2)};
-    }
-
     private Board moveEmpty(Point empty, Point dir)
     {
         assert dir.i + dir.j == 1;
 
         Board other = new Board(this);
         other.swap(empty, empty.move(dir));
-        other.m_parent = this;
+        other.parent = this;
         return other;
     }
 
@@ -280,8 +268,8 @@ public class Board
                 {7, 8, 6}
         }));
 
-        int N = 10;
-        while (!list.isEmpty() && N-- > 0)
+        int n = 10;
+        while (!list.isEmpty() && n-- > 0)
         {
             Board board = list.remove(0);
             board.printBoard();
@@ -294,6 +282,20 @@ public class Board
                 list.add(neighbor);
             }
         }
+
+        Board b1 = new Board(new int[][] {
+                {6, 7, 2},
+                {8, 3, 4},
+                {1, 5, 0}
+        });
+        Board b2 = new Board(new int[][] {
+                {6, 7, 2},
+                {8, 3, 4},
+                {1, 5, 0}
+        });
+        System.out.println(b1.equals(b2));
+        System.out.println(((Object) b1).equals(b2));
+        System.out.println(b1.equals((Object) b2));
     }
 
     private void printBoard()
