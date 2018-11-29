@@ -76,7 +76,7 @@ fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
 fig.canvas.set_window_title('Budget deficits')
 fig.suptitle('US Budget deficits as a % of GDP in 1970-2010, '
              'by administration, with adjustments for 10/01 - 09/30 fiscal year')
-fig.set_size_inches(800, 600)
+# fig.set_size_inches(800, 600)
 
 for president, df in m.groupby('President', sort=False):
     ax1.bar(df.index, -1 * df['% GDP'], label=president.split()[-1], color=colors[president])
