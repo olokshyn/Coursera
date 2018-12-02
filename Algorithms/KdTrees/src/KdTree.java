@@ -1,28 +1,80 @@
+import java.util.List;
+import java.util.LinkedList;
+
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
 
-public class KdTree<Key extends Comparable<Key>, Value>
+public class KdTree
 {
     private static final boolean RED = true;
     private static final boolean BLACK = false;
 
     private Node root;
+    private int size;
 
     private class Node
     {
-        Key key;
-        Value value;
-        Node left;
-        Node right;
-        boolean color;
+        private Point2D point;
+        private final RectHV box;
+        private Node left;
+        private Node right;
+        private boolean color;
 
-        public Node(Key key, Value value, boolean color)
+        private Node(Point2D point, boolean color, double xmin, double ymin, double xmax, double ymax)
         {
-            this.key = key;
-            this.value = value;
+            this.point = point;
+            box = new RectHV(xmin, ymin, xmax, ymax);
             this.color = color;
         }
+    }
+
+    public KdTree()
+    {
+        root = null;
+        size = 0;
+    }
+
+    public boolean isEmpty()                      // is the set empty?
+    {
+        return root == null;
+    }
+
+    public int size()                         // number of points in the set
+    {
+        return size;
+    }
+
+    public void insert(Point2D p)              // add the point to the set (if it is not already in the set)
+    {
+        root = put(root, p, 0, 0, 0, 1, 1);
+        root.color = BLACK;
+    }
+
+    public boolean contains(Point2D p)            // does the set contain point p?
+    {
+        return get(p) != null;
+    }
+
+    public void draw()                         // draw all points to standard draw
+    {
+        draw(root, 0);
+    }
+
+    public Iterable<Point2D> range(RectHV rect)             // all points that are inside the rectangle (or on the boundary)
+    {
+        List<Point2D> list = new LinkedList<Point2D>();
+        range(root, rect, list);
+        return list;
+    }
+
+    public Point2D nearest(Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
+    {
+        if (root == null)
+        {
+            return null;
+        }
+        return nearest(root, p, root.point, 0);
     }
 
     private Node rotateLeft(Node h)
@@ -66,12 +118,25 @@ public class KdTree<Key extends Comparable<Key>, Value>
         return x.color == RED;
     }
 
-    private Value get(Key key)
+    private int compare(Point2D p1, Point2D p2, int level)
+    {
+        if (level % 2 == 0)
+        {
+            return Point2D.X_ORDER.compare(p1, p2);
+        }
+        else
+        {
+            return Point2D.Y_ORDER.compare(p1, p2);
+        }
+    }
+
+    private Node get(Point2D point)
     {
         Node x = root;
+        int level = 0;
         while (x != null)
         {
-            int cmp = key.compareTo(x.key);
+            int cmp = compare(point, x.point, level++);
             if (cmp < 0)
             {
                 x = x.left;
@@ -82,30 +147,46 @@ public class KdTree<Key extends Comparable<Key>, Value>
             }
             else
             {
-                return x.value;
+                return x;
             }
         }
         return null;
     }
 
-    private Node put(Node h, Key key, Value value)
+    private Node put(Node h, Point2D point, int level, double xmin, double ymin, double xmax, double ymax)
     {
         if (h == null)
         {
-            return new Node(key, value, RED);
+            ++size;
+            return new Node(point, RED, xmin, ymin, xmax, ymax);
         }
-        int cmp = key.compareTo(h.key);
-        if (cmp < 0)
+        if (point.distanceSquaredTo(h.point) < 1e-5)
         {
-            h.left = put(h.left, key, value);
+            return h;
         }
-        else if (cmp > 0)
+        if (level % 2 == 0)
         {
-            h.right = put(h.right, key, value);
+            int cmp = Point2D.X_ORDER.compare(point, h.point);
+            if (cmp < 0)
+            {
+                h.left = put(h.left, point, level + 1, xmin, ymin, h.point.x(), ymax);
+            }
+            else
+            {
+                h.right = put(h.right, point, level + 1, h.point.x(), ymin, xmax, ymax);
+            }
         }
         else
         {
-            h.value = value;
+            int cmp = Point2D.Y_ORDER.compare(point, h.point);
+            if (cmp < 0)
+            {
+                h.left = put(h.left, point, level + 1, xmin, ymin, xmax, h.point.y());
+            }
+            else
+            {
+                h.right = put(h.right, point, level + 1, xmin, h.point.y(), xmax, ymax);
+            }
         }
 
         if (isRed(h.right) && !isRed(h.left))
@@ -124,60 +205,73 @@ public class KdTree<Key extends Comparable<Key>, Value>
         return h;
     }
 
-    private void put(Key key, Value value)
+    private void draw(Node h, int level)
     {
-        root = put(root, key, value);
-        root.color = BLACK;
-    }
-
-    int compare(Point2D p1, Point2D p2, int level)
-    {
+        if (h == null)
+        {
+            return;
+        }
         if (level % 2 == 0)
         {
-            return Point2D.X_ORDER.compare(p1, p2);
+            StdDraw.setPenColor(StdDraw.RED);
+            StdDraw.setPenRadius();
+            StdDraw.line(h.point.x(), h.box.ymin(), h.point.x(), h.box.ymax());
         }
         else
         {
-            return Point2D.Y_ORDER.compare(p1, p2);
+            StdDraw.setPenColor(StdDraw.BLUE);
+            StdDraw.setPenRadius();
+            StdDraw.line(h.box.xmin(), h.point.y(), h.box.xmax(), h.point.y());
+        }
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.setPenRadius(0.01);
+        h.point.draw();
+
+        draw(h.left, level + 1);
+        draw(h.right, level + 1);
+    }
+
+    private void range(Node h, RectHV rect, List<Point2D> list)
+    {
+        if (h ==  null)
+        {
+            return;
+        }
+        if (rect.contains(h.point))
+        {
+            list.add(h.point);
+        }
+        if (rect.intersects(h.box))
+        {
+            range(h.left, rect, list);
+            range(h.right, rect, list);
         }
     }
 
-    public KdTree()
+    private Point2D nearest(Node h, Point2D point, Point2D closest, int level)
     {
-        root = null;
-    }
-
-    public boolean isEmpty()                      // is the set empty?
-    {
-
-    }
-    public int size()                         // number of points in the set
-    {
-
-    }
-    public void insert(Point2D p)              // add the point to the set (if it is not already in the set)
-    {
-
-    }
-    public boolean contains(Point2D p)            // does the set contain point p?
-    {
-
-    }
-    public void draw()                         // draw all points to standard draw
-    {
-
-    }
-    public Iterable<Point2D> range(RectHV rect)             // all points that are inside the rectangle (or on the boundary)
-    {
-
-    }
-    public Point2D nearest(Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
-    {
-
-    }
-
-    public static void main(String[] args)                  // unit testing of the methods (optional)
-    {
-
+        if (h == null)
+        {
+            return closest;
+        }
+        if (h.point.distanceSquaredTo(point) < closest.distanceSquaredTo(point))
+        {
+            closest = h.point;
+        }
+        if (h.box.distanceSquaredTo(point) < closest.distanceSquaredTo(point))
+        {
+            int cmp = compare(point, h.point, level);
+            if (cmp < 0)
+            {
+                closest = nearest(h.left, point, closest, level + 1);
+                closest = nearest(h.right, point, closest, level + 1);
+            }
+            else
+            {
+                closest = nearest(h.right, point, closest, level + 1);
+                closest = nearest(h.left, point, closest, level + 1);
+            }
+        }
+        return closest;
     }
 }

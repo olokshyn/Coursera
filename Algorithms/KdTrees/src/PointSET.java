@@ -8,7 +8,7 @@ import edu.princeton.cs.algs4.StdDraw;
 
 public class PointSET
 {
-    private SET<Point2D> points;
+    private final SET<Point2D> points;
 
     public PointSET()                               // construct an empty set of points
     {
@@ -58,7 +58,7 @@ public class PointSET
         List<Point2D> inside = new LinkedList<Point2D>();
         for (Point2D point : points)
         {
-            if (       point.x() >= rect.xmin()
+            if (point.x() >= rect.xmin()
                     && point.x() <= rect.xmax()
                     && point.y() >= rect.ymin()
                     && point.y() <= rect.ymax())
@@ -91,10 +91,5 @@ public class PointSET
             }
         }
         return closest;
-    }
-
-    public static void main(String[] args)                  // unit testing of the methods (optional)
-    {
-
     }
 }
