@@ -7,8 +7,6 @@ import edu.princeton.cs.algs4.StdDraw;
 
 public class KdTree
 {
-    private static final double EPS = 0.00001;
-
     private Node root;
     private int size;
 
@@ -44,11 +42,19 @@ public class KdTree
 
     public void insert(Point2D p)              // add the point to the set (if it is not already in the set)
     {
+        if (p == null)
+        {
+            throw new IllegalArgumentException();
+        }
         root = put(root, p, 0, 0, 0, 1, 1);
     }
 
     public boolean contains(Point2D p)            // does the set contain point p?
     {
+        if (p == null)
+        {
+            throw new IllegalArgumentException();
+        }
         return get(p) != null;
     }
 
@@ -59,6 +65,10 @@ public class KdTree
 
     public Iterable<Point2D> range(RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
+        if (rect == null)
+        {
+            throw new IllegalArgumentException();
+        }
         List<Point2D> list = new LinkedList<Point2D>();
         range(root, rect, list);
         return list;
@@ -66,6 +76,10 @@ public class KdTree
 
     public Point2D nearest(Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
+        if (p == null)
+        {
+            throw new IllegalArgumentException();
+        }
         if (root == null)
         {
             return null;
@@ -91,7 +105,7 @@ public class KdTree
         int level = 0;
         while (h != null)
         {
-            if (Math.abs(point.x() - h.point.x()) < EPS && Math.abs(point.y() - h.point.y()) < EPS)
+            if (point.equals(h.point))
             {
                 return h;
             }
@@ -115,7 +129,7 @@ public class KdTree
             ++size;
             return new Node(point, xmin, ymin, xmax, ymax);
         }
-        if (Math.abs(point.x() - h.point.x()) < EPS && Math.abs(point.y() - h.point.y()) < EPS)
+        if (point.equals(h.point))
         {
             return h;
         }
@@ -179,12 +193,12 @@ public class KdTree
         {
             return;
         }
-        if (rect.contains(h.point))
-        {
-            list.add(h.point);
-        }
         if (rect.intersects(h.box))
         {
+            if (rect.contains(h.point))
+            {
+                list.add(h.point);
+            }
             range(h.left, rect, list);
             range(h.right, rect, list);
         }
@@ -196,23 +210,24 @@ public class KdTree
         {
             return closest;
         }
+        if (h.box.distanceSquaredTo(point) >= closest.distanceSquaredTo(point))
+        {
+            return closest;
+        }
         if (h.point.distanceSquaredTo(point) < closest.distanceSquaredTo(point))
         {
             closest = h.point;
         }
-        if (h.box.distanceSquaredTo(point) < closest.distanceSquaredTo(point))
+        int cmp = compare(point, h.point, level);
+        if (cmp < 0)
         {
-            int cmp = compare(point, h.point, level);
-            if (cmp < 0)
-            {
-                closest = nearest(h.left, point, closest, level + 1);
-                closest = nearest(h.right, point, closest, level + 1);
-            }
-            else
-            {
-                closest = nearest(h.right, point, closest, level + 1);
-                closest = nearest(h.left, point, closest, level + 1);
-            }
+            closest = nearest(h.left, point, closest, level + 1);
+            closest = nearest(h.right, point, closest, level + 1);
+        }
+        else
+        {
+            closest = nearest(h.right, point, closest, level + 1);
+            closest = nearest(h.left, point, closest, level + 1);
         }
         return closest;
     }
@@ -225,7 +240,6 @@ public class KdTree
         tree.insert(new Point2D(0.2, 0.3));
         tree.insert(new Point2D(0.4, 0.7));
         tree.insert(new Point2D(0.9, 0.6));
-        boolean contains = tree.contains(new Point2D(0.7, 0.4));
-        System.out.println(contains);
+        tree.range(new RectHV(0.13,0.51,0.86,0.82));
     }
 }
