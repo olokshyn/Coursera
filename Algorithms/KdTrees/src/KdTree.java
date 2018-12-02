@@ -7,25 +7,22 @@ import edu.princeton.cs.algs4.StdDraw;
 
 public class KdTree
 {
-    private static final boolean RED = true;
-    private static final boolean BLACK = false;
+    private static final double EPS = 0.00001;
 
     private Node root;
     private int size;
 
     private class Node
     {
-        private Point2D point;
+        private final Point2D point;
         private final RectHV box;
         private Node left;
         private Node right;
-        private boolean color;
 
-        private Node(Point2D point, boolean color, double xmin, double ymin, double xmax, double ymax)
+        private Node(Point2D point, double xmin, double ymin, double xmax, double ymax)
         {
             this.point = point;
             box = new RectHV(xmin, ymin, xmax, ymax);
-            this.color = color;
         }
     }
 
@@ -48,7 +45,6 @@ public class KdTree
     public void insert(Point2D p)              // add the point to the set (if it is not already in the set)
     {
         root = put(root, p, 0, 0, 0, 1, 1);
-        root.color = BLACK;
     }
 
     public boolean contains(Point2D p)            // does the set contain point p?
@@ -77,47 +73,6 @@ public class KdTree
         return nearest(root, p, root.point, 0);
     }
 
-    private Node rotateLeft(Node h)
-    {
-        assert isRed(h.right);
-        Node x = h.right;
-        h.right = x.left;
-        x.left = h;
-        x.color = h.color;
-        h.color = RED;
-        return x;
-    }
-
-    private Node rotateRight(Node h)
-    {
-        assert isRed(h.left);
-        Node x = h.left;
-        h.left = x.right;
-        x.right = h;
-        x.color = h.color;
-        h.color = RED;
-        return x;
-    }
-
-    private void flipColors(Node h)
-    {
-        assert !isRed(h);
-        assert isRed(h.left);
-        assert isRed(h.right);
-        h.color = RED;
-        h.left.color = BLACK;
-        h.right.color = BLACK;
-    }
-
-    private boolean isRed(Node x)
-    {
-        if (x == null)
-        {
-            return false;
-        }
-        return x.color == RED;
-    }
-
     private int compare(Point2D p1, Point2D p2, int level)
     {
         if (level % 2 == 0)
@@ -132,22 +87,22 @@ public class KdTree
 
     private Node get(Point2D point)
     {
-        Node x = root;
+        Node h = root;
         int level = 0;
-        while (x != null)
+        while (h != null)
         {
-            int cmp = compare(point, x.point, level++);
+            if (Math.abs(point.x() - h.point.x()) < EPS && Math.abs(point.y() - h.point.y()) < EPS)
+            {
+                return h;
+            }
+            int cmp = compare(point, h.point, level++);
             if (cmp < 0)
             {
-                x = x.left;
-            }
-            else if (cmp > 0)
-            {
-                x = x.right;
+                h = h.left;
             }
             else
             {
-                return x;
+                h = h.right;
             }
         }
         return null;
@@ -158,9 +113,9 @@ public class KdTree
         if (h == null)
         {
             ++size;
-            return new Node(point, RED, xmin, ymin, xmax, ymax);
+            return new Node(point, xmin, ymin, xmax, ymax);
         }
-        if (point.distanceSquaredTo(h.point) < 1e-5)
+        if (Math.abs(point.x() - h.point.x()) < EPS && Math.abs(point.y() - h.point.y()) < EPS)
         {
             return h;
         }
@@ -187,19 +142,6 @@ public class KdTree
             {
                 h.right = put(h.right, point, level + 1, xmin, h.point.y(), xmax, ymax);
             }
-        }
-
-        if (isRed(h.right) && !isRed(h.left))
-        {
-            h = rotateLeft(h);
-        }
-        if (isRed(h.left) && isRed(h.left.left))
-        {
-            h = rotateRight(h);
-        }
-        if (isRed(h.left) && isRed(h.right))
-        {
-            flipColors(h);
         }
 
         return h;
@@ -273,5 +215,17 @@ public class KdTree
             }
         }
         return closest;
+    }
+
+    public static void main(String[] args)
+    {
+        KdTree tree = new KdTree();
+        tree.insert(new Point2D(0.7, 0.2));
+        tree.insert(new Point2D(0.5, 0.4));
+        tree.insert(new Point2D(0.2, 0.3));
+        tree.insert(new Point2D(0.4, 0.7));
+        tree.insert(new Point2D(0.9, 0.6));
+        boolean contains = tree.contains(new Point2D(0.7, 0.4));
+        System.out.println(contains);
     }
 }
